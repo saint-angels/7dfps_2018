@@ -23,15 +23,32 @@ public class Seagull : MonoBehaviour {
     private NavMeshAgent agent;
     private float wanderCooldownCurrent;
 
+    private BoidBehaviour boid;
+
     void Start ()
     {
         SeagullManager.Instance.Register(this);
         agent = GetComponent<NavMeshAgent>();
+        boid = GetComponent<BoidBehaviour>();
         wanderCooldownCurrent = wanderCooldown;
+        SetState(SeagullState.IDLE);
     }
 
     void Update ()
     {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (state == SeagullState.IDLE)
+            {
+                SetState(SeagullState.FLYING);
+            }
+            else
+            {
+                SetState(SeagullState.IDLE);
+            }
+            
+        }
+
         switch (state)
         {
             case SeagullState.IDLE:
@@ -54,17 +71,27 @@ public class Seagull : MonoBehaviour {
 
     private void SetState(SeagullState newState)
     {
+        boid.enabled = false;
         switch (newState)
         {
             case SeagullState.IDLE:
+                transform.position = SeagullManager.Instance.eatPoint.position;
+                agent.enabled = true;
+
                 break;
             case SeagullState.WALKING:
+                agent.enabled = true;
                 break;
             case SeagullState.FLYING:
+                transform.position = SeagullManager.Instance.flyPoint.position;
+                agent.enabled = false;
+                boid.enabled = true;
                 break;
             default:
                 break;
         }
+
+        state = newState;
     }
 
     private static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)

@@ -5,6 +5,8 @@ using UnityEngine;
 public class SeagullManager : SingletonComponent<SeagullManager> {
 
     public List<Seagull> activeSeagulls = new List<Seagull>();
+    public Transform eatPoint;
+    public Transform flyPoint;
 
     public void Register(Seagull newSeagull)
     {
