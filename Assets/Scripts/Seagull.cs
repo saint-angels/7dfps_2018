@@ -9,7 +9,8 @@ public class Seagull : MonoBehaviour {
     {
         IDLE,
         WALKING,
-        FLYING
+        FLYING,
+        APPROACHING_FOOD
     }
 
     [Header("Walking")]
@@ -18,6 +19,7 @@ public class Seagull : MonoBehaviour {
 
     [SerializeField] private SeagullState state;
     [SerializeField] private Animator animator;
+    [SerializeField] private float foodAggroDistance = 10f;
 
     //Walking
     private Transform target;
@@ -25,6 +27,7 @@ public class Seagull : MonoBehaviour {
     private float wanderCooldownCurrent;
 
     private BoidBehaviour boid;
+    private Food approachingFood = null;
 
     void Start ()
     {
@@ -53,6 +56,15 @@ public class Seagull : MonoBehaviour {
         switch (state)
         {
             case SeagullState.IDLE:
+                foreach (var food in Food.foodList)
+                {
+                    if (Vector3.Distance(food.transform.position, transform.position) < foodAggroDistance)
+                    {
+                        approachingFood = food;
+                        SetState(SeagullState.APPROACHING_FOOD);
+                    }
+                }
+
                 wanderCooldownCurrent += Time.deltaTime;
                 if (wanderCooldownCurrent >= wanderCooldown)
                 {
@@ -64,6 +76,9 @@ public class Seagull : MonoBehaviour {
             case SeagullState.WALKING:
                 break;
             case SeagullState.FLYING:
+                break;
+            case SeagullState.APPROACHING_FOOD:
+                agent.SetDestination(approachingFood.transform.position);
                 break;
             default:
                 break;
@@ -92,6 +107,12 @@ public class Seagull : MonoBehaviour {
                 transform.position = SeagullManager.Instance.flyPoint.position;
                 agent.enabled = false;
                 boid.enabled = true;
+                break;
+            case SeagullState.APPROACHING_FOOD:
+                //TODO: Split into approaching flying/walking?
+                animator.SetBool("walk", true);
+                transform.position = SeagullManager.Instance.eatPoint.position;
+                agent.enabled = true;
                 break;
             default:
                 break;
