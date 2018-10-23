@@ -17,6 +17,7 @@ public class Seagull : MonoBehaviour {
     public float wanderCooldown = 1f;
 
     [SerializeField] private SeagullState state;
+    [SerializeField] private Animator animator;
 
     //Walking
     private Transform target;
@@ -72,17 +73,22 @@ public class Seagull : MonoBehaviour {
     private void SetState(SeagullState newState)
     {
         boid.enabled = false;
+        animator.SetBool("walk", false);
+        animator.SetBool("fly", false);
         switch (newState)
         {
             case SeagullState.IDLE:
+                animator.SetBool("walk", true);
                 transform.position = SeagullManager.Instance.eatPoint.position;
                 agent.enabled = true;
-
+                
                 break;
             case SeagullState.WALKING:
+                animator.SetBool("walk", true);
                 agent.enabled = true;
                 break;
             case SeagullState.FLYING:
+                animator.SetBool("fly", true);
                 transform.position = SeagullManager.Instance.flyPoint.position;
                 agent.enabled = false;
                 boid.enabled = true;

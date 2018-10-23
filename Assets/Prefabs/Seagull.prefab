@@ -1008,6 +1008,7 @@ MonoBehaviour:
   wanderRadius: 5
   wanderCooldown: 1
   state: 0
+  animator: {fileID: 95539813905627394}
 --- !u!114 &114976699265465972
 MonoBehaviour:
   m_ObjectHideFlags: 1
