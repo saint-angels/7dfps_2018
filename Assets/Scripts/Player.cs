@@ -5,6 +5,7 @@ using UnityEngine;
 public class Player : MonoBehaviour {
 
     [SerializeField] private Transform itemSlot;
+    [SerializeField] private Camera cam;
 
     [Header("Energy Gaining")]
     public float energyRecoverSpeed = 1f;
@@ -14,8 +15,7 @@ public class Player : MonoBehaviour {
     public float energyDrainSpeed = 1f;
     public bool energyDraining = false;
 
-
-    [SerializeField] private Camera cam;
+    private Food holdingFood;
     private int itemLayerMask;
     private Vector3 screenCenter;
 
@@ -27,22 +27,31 @@ public class Player : MonoBehaviour {
 
     void Update ()
     {
-
-
-        RaycastHit hit;
-        
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(screenCenter), out hit, 100f, itemLayerMask))
+        if (holdingFood == null)
         {
-            Food foodFound = hit.collider.GetComponent<Food>();
-            //TODO: Highlight?
-            if (Input.GetKeyDown(KeyCode.Mouse0) && Vector3.Distance(transform.position, foodFound.transform.position) < 1.5f)
+            RaycastHit hit;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(screenCenter), out hit, 100f, itemLayerMask))
             {
-                PickUp(foodFound);
+                Food foodFound = hit.collider.GetComponent<Food>();
+                //TODO: Highlight?
+                if (Input.GetKeyDown(KeyCode.Mouse0) && Vector3.Distance(transform.position, foodFound.transform.position) < 2.5f)
+                {
+                    foodFound.transform.parent = itemSlot;
+                    foodFound.transform.localPosition = Vector3.zero;
+                    foodFound.PickUp();
+                    holdingFood = foodFound;
+                }   
             }
-
-            
         }
-
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                this.holdingFood.transform.parent = null;
+                this.holdingFood.Throw(transform.forward + transform.up);
+                holdingFood = null;
+            }
+        }
 
         //Energy GAIN
         float energyGained = 0;
@@ -75,12 +84,6 @@ public class Player : MonoBehaviour {
         {
             Die();
         }
-    }
-
-    private void PickUp(Food newFood)
-    {
-        newFood.transform.parent = itemSlot;
-        newFood.transform.localPosition = Vector3.zero;
     }
 
     private void Die()
