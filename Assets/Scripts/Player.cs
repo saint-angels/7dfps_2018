@@ -33,6 +33,7 @@ public class Player : MonoBehaviour {
             if (Physics.Raycast(Camera.main.ScreenPointToRay(screenCenter), out hit, 100f, itemLayerMask))
             {
                 Food foodFound = hit.collider.GetComponent<Food>();
+                foodFound.OnLookedUpon();
                 //TODO: Highlight?
                 if (Input.GetKeyDown(KeyCode.Mouse0) && Vector3.Distance(transform.position, foodFound.transform.position) < 2.5f)
                 {

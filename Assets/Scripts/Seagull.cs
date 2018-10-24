@@ -8,9 +8,10 @@ public class Seagull : MonoBehaviour {
     enum SeagullState
     {
         IDLE,
-        WALKING,
         FLYING,
-        APPROACHING_FOOD
+        WALKING_TO_FOOD,
+        LANDING,
+        EATING
     }
 
     [Header("Walking")]
@@ -29,6 +30,10 @@ public class Seagull : MonoBehaviour {
     private BoidBehaviour boid;
     private Food approachingFood = null;
 
+    private float landProgress = 0f;
+    private Vector3 landPointStart;
+    private Quaternion landRotStart;
+
     void Start ()
     {
         SeagullManager.Instance.Register(this);
@@ -40,17 +45,21 @@ public class Seagull : MonoBehaviour {
 
     void Update ()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (state == SeagullState.IDLE)
-            {
-                SetState(SeagullState.FLYING);
-            }
-            else
-            {
-                SetState(SeagullState.IDLE);
-            }
-            
+            SetState(SeagullState.FLYING);
+            //if (state == SeagullState.IDLE)
+            //{
+                
+            //}
+            //else
+            //{
+            //    SetState(SeagullState.IDLE);
+            //}
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SetState(SeagullState.LANDING);
         }
 
         switch (state)
@@ -61,7 +70,7 @@ public class Seagull : MonoBehaviour {
                     if (Vector3.Distance(food.transform.position, transform.position) < foodAggroDistance)
                     {
                         approachingFood = food;
-                        SetState(SeagullState.APPROACHING_FOOD);
+                        SetState(SeagullState.WALKING_TO_FOOD);
                     }
                 }
 
@@ -73,11 +82,19 @@ public class Seagull : MonoBehaviour {
                     wanderCooldownCurrent = 0;
                 }
                 break;
-            case SeagullState.WALKING:
-                break;
             case SeagullState.FLYING:
                 break;
-            case SeagullState.APPROACHING_FOOD:
+            case SeagullState.LANDING:
+                transform.position = Vector3.Slerp(landPointStart, SeagullManager.Instance.landPoint.position, landProgress);
+                transform.rotation = Quaternion.Lerp(landRotStart, Quaternion.identity, landProgress);
+                landProgress += .5f * Time.deltaTime;
+                if (landProgress >= 1f)
+                {
+                    SetState(SeagullState.IDLE);
+                }
+                print(landProgress);
+                break;
+            case SeagullState.WALKING_TO_FOOD:
                 agent.SetDestination(approachingFood.transform.position);
                 break;
             default:
@@ -90,16 +107,12 @@ public class Seagull : MonoBehaviour {
         boid.enabled = false;
         animator.SetBool("walk", false);
         animator.SetBool("fly", false);
+        animator.SetBool("landing", false);
         switch (newState)
         {
             case SeagullState.IDLE:
                 animator.SetBool("walk", true);
-                transform.position = SeagullManager.Instance.eatPoint.position;
-                agent.enabled = true;
-                
-                break;
-            case SeagullState.WALKING:
-                animator.SetBool("walk", true);
+                transform.position = SeagullManager.Instance.landPoint.position;
                 agent.enabled = true;
                 break;
             case SeagullState.FLYING:
@@ -108,10 +121,16 @@ public class Seagull : MonoBehaviour {
                 agent.enabled = false;
                 boid.enabled = true;
                 break;
-            case SeagullState.APPROACHING_FOOD:
+            case SeagullState.LANDING:
+                animator.SetBool("landing", true);
+                landPointStart = transform.position;
+                landRotStart = transform.rotation;
+                landProgress = 0;
+                break;
+            case SeagullState.WALKING_TO_FOOD:
                 //TODO: Split into approaching flying/walking?
                 animator.SetBool("walk", true);
-                transform.position = SeagullManager.Instance.eatPoint.position;
+                transform.position = SeagullManager.Instance.landPoint.position;
                 agent.enabled = true;
                 break;
             default:
