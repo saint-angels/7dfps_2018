@@ -21,7 +21,6 @@ public class Food : MonoBehaviour {
         foodList.Add(this);
     }
 	
-	// Update is called once per frame
 	void Update () {
 
         renderer.material.SetFloat("_Outline", 0f);
@@ -43,5 +42,11 @@ public class Food : MonoBehaviour {
         rb.isKinematic = false;
         rb.AddForce(direction * throwForce, ForceMode.Impulse);
         isPickedUp = false;
+    }
+
+    public void Eat()
+    {
+        foodList.Remove(this);
+        Destroy(gameObject);
     }
 }

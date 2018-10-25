@@ -28,11 +28,13 @@ public class Seagull : MonoBehaviour {
     private float wanderCooldownCurrent;
 
     private BoidBehaviour boid;
-    private Food approachingFood = null;
+    private Food selectedFood = null;
 
     private float landProgress = 0f;
     private Vector3 landPointStart;
     private Quaternion landRotStart;
+
+    private uint foodPoints = 0;
 
     void Start ()
     {
@@ -62,7 +64,7 @@ public class Seagull : MonoBehaviour {
                     if (Vector3.Distance(food.transform.position, transform.position) < foodAggroDistance && 
                         food.isPickedUp == false)
                     {
-                        approachingFood = food;
+                        selectedFood = food;
                         SetState(SeagullState.WALKING_TO_FOOD);
                     }
                 }
@@ -81,7 +83,7 @@ public class Seagull : MonoBehaviour {
                     if (Vector3.Distance(food.transform.position, SeagullManager.Instance.landPoint.position) < foodAggroDistance && 
                         food.isPickedUp == false)
                     {
-                        approachingFood = food;
+                        selectedFood = food;
                         SetState(SeagullState.LANDING);
                     }
                 }
@@ -97,10 +99,27 @@ public class Seagull : MonoBehaviour {
                 print(landProgress);
                 break;
             case SeagullState.WALKING_TO_FOOD:
-                agent.SetDestination(approachingFood.transform.position);
-                if (Vector3.Distance(approachingFood.transform.position, transform.position) < .1f)
+                agent.SetDestination(selectedFood.transform.position);
+                if (Vector3.Distance(selectedFood.transform.position, transform.position) < .3f)
                 {
                     SetState(SeagullState.EATING);
+                }
+                break;
+            case SeagullState.EATING:
+                bool finishedEating = this.animator.GetCurrentAnimatorStateInfo(0).IsName("peck") == false;
+                if (finishedEating)
+                {
+                    selectedFood.Eat();
+                    foodPoints++;
+
+                    if (foodPoints >= 3)
+                    {
+                        //TODO: Set follower state
+                    }
+                    else
+                    {
+                        SetState(SeagullState.IDLE);
+                    }
                 }
                 break;
             default:
@@ -140,7 +159,7 @@ public class Seagull : MonoBehaviour {
                 agent.enabled = true;
                 break;
             case SeagullState.EATING:
-                animator.SetTrigger("peck");
+                animator.Play("peck");
                 agent.enabled = false;
                 break;
             default:
