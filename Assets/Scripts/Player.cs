@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour {
+public class Player : SingletonComponent<Player> {
 
     [SerializeField] private Transform itemSlot;
     [SerializeField] private Camera cam;

@@ -11,7 +11,10 @@ public class Seagull : MonoBehaviour {
         FLYING,
         WALKING_TO_FOOD,
         LANDING,
-        EATING
+        EATING,
+        WALKING_TO_TAKEOFF,
+        TAKEOFF,
+        FOLLOWING
     }
 
     [Header("Walking")]
@@ -43,6 +46,7 @@ public class Seagull : MonoBehaviour {
         boid = GetComponent<BoidBehaviour>();
         wanderCooldownCurrent = wanderCooldown;
         SetState(SeagullState.FLYING);
+        RecalculateScale();
     }
 
     void Update ()
@@ -96,7 +100,15 @@ public class Seagull : MonoBehaviour {
                 {
                     SetState(SeagullState.IDLE);
                 }
-                print(landProgress);
+                break;
+            case SeagullState.TAKEOFF:
+                transform.position = Vector3.Slerp(landPointStart, SeagullManager.Instance.flyPoint.position, landProgress);
+                transform.rotation = Quaternion.Lerp(landRotStart, Quaternion.identity, landProgress);
+                landProgress += .5f * Time.deltaTime;
+                if (landProgress >= 1f)
+                {
+                    SetState(SeagullState.FLYING);
+                }
                 break;
             case SeagullState.WALKING_TO_FOOD:
                 agent.SetDestination(selectedFood.transform.position);
@@ -105,24 +117,35 @@ public class Seagull : MonoBehaviour {
                     SetState(SeagullState.EATING);
                 }
                 break;
+            case SeagullState.WALKING_TO_TAKEOFF:
+                agent.SetDestination(SeagullManager.Instance.landPoint.position);
+                if (Vector3.Distance(SeagullManager.Instance.landPoint.position, transform.position) < .3f)
+                {
+                    SetState(SeagullState.TAKEOFF);
+                }
+                break;
             case SeagullState.EATING:
                 bool finishedEating = this.animator.GetCurrentAnimatorStateInfo(0).IsName("peck") == false;
                 if (finishedEating)
                 {
                     selectedFood.Eat();
+
                     foodPoints++;
+                    RecalculateScale();
 
                     if (foodPoints >= 3)
                     {
-                        //TODO: Set follower state
+                        SetState(SeagullState.FOLLOWING);
                     }
                     else
                     {
-                        SetState(SeagullState.IDLE);
+                        SetState(SeagullState.WALKING_TO_TAKEOFF);
                     }
                 }
                 break;
-            default:
+            case SeagullState.FOLLOWING:
+                var playerT = Player.Instance.transform;
+                agent.SetDestination(playerT.position + playerT.forward);
                 break;
         }
     }
@@ -134,12 +157,12 @@ public class Seagull : MonoBehaviour {
         animator.SetBool("walk", false);
         animator.SetBool("fly", false);
         animator.SetBool("landing", false);
+        animator.SetBool("takeoff", false);
         agent.enabled = false;
         switch (newState)
         {
             case SeagullState.IDLE:
                 animator.SetBool("idle", true);
-                transform.position = SeagullManager.Instance.landPoint.position;
                 agent.enabled = true;
                 break;
             case SeagullState.FLYING:
@@ -153,20 +176,41 @@ public class Seagull : MonoBehaviour {
                 landRotStart = transform.rotation;
                 landProgress = 0;
                 break;
+            case SeagullState.TAKEOFF:
+                animator.SetBool("takeoff", true);
+                landPointStart = transform.position;
+                landRotStart = transform.rotation;
+                landProgress = 0;
+                break;
             case SeagullState.WALKING_TO_FOOD:
                 animator.SetBool("walk", true);
                 transform.position = SeagullManager.Instance.landPoint.position;
+                agent.enabled = true;
+                break;
+            case SeagullState.WALKING_TO_TAKEOFF:
+                animator.SetBool("walk", true);
                 agent.enabled = true;
                 break;
             case SeagullState.EATING:
                 animator.Play("peck");
                 agent.enabled = false;
                 break;
+            case SeagullState.FOLLOWING:
+                animator.SetBool("walk", true);
+                agent.enabled = true;
+                break;
             default:
                 break;
         }
 
         state = newState;
+    }
+
+    private void RecalculateScale()
+    {
+
+        var newScale = foodPoints + 1;
+        transform.localScale = new Vector3(newScale, newScale, newScale);
     }
 
     private static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
