@@ -40,7 +40,7 @@ public class Seagull : MonoBehaviour {
         agent = GetComponent<NavMeshAgent>();
         boid = GetComponent<BoidBehaviour>();
         wanderCooldownCurrent = wanderCooldown;
-        SetState(SeagullState.IDLE);
+        SetState(SeagullState.FLYING);
     }
 
     void Update ()
@@ -48,14 +48,6 @@ public class Seagull : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             SetState(SeagullState.FLYING);
-            //if (state == SeagullState.IDLE)
-            //{
-                
-            //}
-            //else
-            //{
-            //    SetState(SeagullState.IDLE);
-            //}
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
@@ -67,7 +59,8 @@ public class Seagull : MonoBehaviour {
             case SeagullState.IDLE:
                 foreach (var food in Food.foodList)
                 {
-                    if (Vector3.Distance(food.transform.position, transform.position) < foodAggroDistance)
+                    if (Vector3.Distance(food.transform.position, transform.position) < foodAggroDistance && 
+                        food.isPickedUp == false)
                     {
                         approachingFood = food;
                         SetState(SeagullState.WALKING_TO_FOOD);
@@ -83,6 +76,15 @@ public class Seagull : MonoBehaviour {
                 }
                 break;
             case SeagullState.FLYING:
+                foreach (var food in Food.foodList)
+                {
+                    if (Vector3.Distance(food.transform.position, SeagullManager.Instance.landPoint.position) < foodAggroDistance && 
+                        food.isPickedUp == false)
+                    {
+                        approachingFood = food;
+                        SetState(SeagullState.LANDING);
+                    }
+                }
                 break;
             case SeagullState.LANDING:
                 transform.position = Vector3.Slerp(landPointStart, SeagullManager.Instance.landPoint.position, landProgress);
@@ -96,6 +98,10 @@ public class Seagull : MonoBehaviour {
                 break;
             case SeagullState.WALKING_TO_FOOD:
                 agent.SetDestination(approachingFood.transform.position);
+                if (Vector3.Distance(approachingFood.transform.position, transform.position) < .1f)
+                {
+                    SetState(SeagullState.EATING);
+                }
                 break;
             default:
                 break;
@@ -105,20 +111,21 @@ public class Seagull : MonoBehaviour {
     private void SetState(SeagullState newState)
     {
         boid.enabled = false;
+        animator.SetBool("idle", false);
         animator.SetBool("walk", false);
         animator.SetBool("fly", false);
         animator.SetBool("landing", false);
+        agent.enabled = false;
         switch (newState)
         {
             case SeagullState.IDLE:
-                animator.SetBool("walk", true);
+                animator.SetBool("idle", true);
                 transform.position = SeagullManager.Instance.landPoint.position;
                 agent.enabled = true;
                 break;
             case SeagullState.FLYING:
                 animator.SetBool("fly", true);
                 transform.position = SeagullManager.Instance.flyPoint.position;
-                agent.enabled = false;
                 boid.enabled = true;
                 break;
             case SeagullState.LANDING:
@@ -128,10 +135,13 @@ public class Seagull : MonoBehaviour {
                 landProgress = 0;
                 break;
             case SeagullState.WALKING_TO_FOOD:
-                //TODO: Split into approaching flying/walking?
                 animator.SetBool("walk", true);
                 transform.position = SeagullManager.Instance.landPoint.position;
                 agent.enabled = true;
+                break;
+            case SeagullState.EATING:
+                animator.SetTrigger("peck");
+                agent.enabled = false;
                 break;
             default:
                 break;
