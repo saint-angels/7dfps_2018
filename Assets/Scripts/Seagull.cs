@@ -38,6 +38,7 @@ public class Seagull : MonoBehaviour {
     private Quaternion landRotStart;
 
     private uint foodPoints = 0;
+    private int[] growth = new int[] { 3, 6, 9, 12 };
 
     void Start ()
     {
@@ -208,8 +209,7 @@ public class Seagull : MonoBehaviour {
 
     private void RecalculateScale()
     {
-
-        var newScale = foodPoints + 1;
+        var newScale = growth[foodPoints];
         transform.localScale = new Vector3(newScale, newScale, newScale);
     }
 
