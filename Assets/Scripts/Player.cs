@@ -1,12 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 
 public class Player : SingletonComponent<Player> {
 
     [SerializeField] private Transform itemSlot;
     [SerializeField] private Camera cam;
     [SerializeField] private Transform spawnPoint;
+    [SerializeField] private PostProcessVolume ppVolume;
 
     [Header("Energy Gaining")]
     public float energyRecoverSpeed = 1f;
@@ -20,11 +22,16 @@ public class Player : SingletonComponent<Player> {
     private int itemLayerMask;
     private Vector3 screenCenter;
 
+    Vignette vignetteLayer = null;
+
+
 
     // Use this for initialization
     void Start () {
         itemLayerMask = LayerMask.GetMask("Items");
         screenCenter = new Vector3(cam.pixelWidth / 2f, cam.pixelHeight / 2f, cam.nearClipPlane);
+        ppVolume.profile.TryGetSettings(out vignetteLayer);
+
     }
 
     void Update ()
@@ -86,6 +93,7 @@ public class Player : SingletonComponent<Player> {
 
 
         energy = Mathf.Clamp(energy, 0f, 100f);
+        vignetteLayer.intensity.value = 1f -  energy / 100f;
 
         if (Mathf.Approximately(0, energy))
         {
