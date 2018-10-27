@@ -21,6 +21,8 @@ public class Seagull : MonoBehaviour {
     public float wanderRadius = 1f;
     public float wanderCooldown = 1f;
 
+    public bool mySeagull = false;
+
     [SerializeField] private SeagullState state;
     [SerializeField] private Animator animator;
     [SerializeField] private float foodAggroDistance = 10f;
@@ -40,6 +42,7 @@ public class Seagull : MonoBehaviour {
 
     private uint foodPoints = 0;
     private int[] growth = new int[] { 3, 6, 9, 12 };
+
 
     void Start ()
     {
@@ -82,14 +85,18 @@ public class Seagull : MonoBehaviour {
                 }
                 break;
             case SeagullState.FLYING:
-                //Check for landing reasons
-                foreach (var food in Food.foodList)
+
+                if (mySeagull)
                 {
-                    if (Vector3.Distance(food.transform.position, SeagullManager.Instance.landPoint.position) < foodAggroDistance && 
-                        food.isPickedUp == false)
+                    //Check for landing reasons
+                    foreach (var food in Food.foodList)
                     {
-                        selectedFood = food;
-                        SetState(SeagullState.LANDING);
+                        if (Vector3.Distance(food.transform.position, SeagullManager.Instance.landPoint.position) < foodAggroDistance && 
+                            food.isPickedUp == false)
+                        {
+                            selectedFood = food;
+                            SetState(SeagullState.LANDING);
+                        }
                     }
                 }
 
@@ -127,7 +134,7 @@ public class Seagull : MonoBehaviour {
                 break;
             case SeagullState.WALKING_TO_FOOD:
                 agent.SetDestination(selectedFood.transform.position);
-                if (Vector3.Distance(selectedFood.transform.position, transform.position) < .3f)
+                if (Vector3.Distance(selectedFood.transform.position, transform.position) < .5f)
                 {
                     SetState(SeagullState.EATING);
                 }

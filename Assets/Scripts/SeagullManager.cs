@@ -18,11 +18,16 @@ public class SeagullManager : SingletonComponent<SeagullManager> {
 
 	// Use this for initialization
 	void Start () {
+        var mySeagullIndex = Random.Range(0, spawnSeagulls);
         for (int i = 0; i < spawnSeagulls; i++)
         {
             var newSeagull = Instantiate(seagullPrefab, GetRandomFlyPoint(), Quaternion.identity) as Seagull;
             newSeagull.transform.parent = transform;
             activeSeagulls.Add(newSeagull);
+            if (i == mySeagullIndex)
+            {
+                newSeagull.mySeagull = true;
+            }
         }
     }
 	

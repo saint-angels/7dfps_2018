@@ -29,6 +29,11 @@ public class Player : SingletonComponent<Player> {
 
     void Update ()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Respawn();
+        }
+
         if (holdingFood == null)
         {
             RaycastHit hit;
@@ -71,7 +76,6 @@ public class Player : SingletonComponent<Player> {
                 //print("distance: " + distanceToSeagull);
             }
         }
-        //print(energyGained);
         energy += energyGained;
 
         //Energy SPENDING
@@ -91,6 +95,8 @@ public class Player : SingletonComponent<Player> {
 
     private void Die()
     {
+        energy = 10f;
+        energyDraining = false;
         Respawn();
     }
 
@@ -102,6 +108,5 @@ public class Player : SingletonComponent<Player> {
     public void Respawn()
     {
         transform.position = spawnPoint.position;
-        //transform.rotation = spawnPoint.rotation;
     }
 }

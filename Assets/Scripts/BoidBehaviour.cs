@@ -73,7 +73,7 @@ public class BoidBehaviour : MonoBehaviour
 
         // Calculates a rotation from the vectors.
         var direction = separation + alignment + cohesion;
-        var rotation = Quaternion.FromToRotation(Vector3.forward, alignment);
+        var rotation = Quaternion.FromToRotation(Vector3.forward, direction);
 
         // Applys the rotation with interpolation.
         //Quaternion targetRotation;
