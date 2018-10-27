@@ -6,6 +6,7 @@ public class Player : SingletonComponent<Player> {
 
     [SerializeField] private Transform itemSlot;
     [SerializeField] private Camera cam;
+    [SerializeField] private Transform spawnPoint;
 
     [Header("Energy Gaining")]
     public float energyRecoverSpeed = 1f;
@@ -18,6 +19,7 @@ public class Player : SingletonComponent<Player> {
     private Food holdingFood;
     private int itemLayerMask;
     private Vector3 screenCenter;
+
 
     // Use this for initialization
     void Start () {
@@ -89,11 +91,17 @@ public class Player : SingletonComponent<Player> {
 
     private void Die()
     {
-        print("Dead!!!");
+        Respawn();
     }
 
     void OnGUI()
     {
         GUI.Label(new Rect(30, 30, 100, 50), energy.ToString());
+    }
+
+    public void Respawn()
+    {
+        transform.position = spawnPoint.position;
+        //transform.rotation = spawnPoint.rotation;
     }
 }

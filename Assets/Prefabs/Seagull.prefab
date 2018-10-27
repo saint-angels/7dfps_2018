@@ -503,8 +503,6 @@ GameObject:
   - component: {fileID: 95539813905627394}
   - component: {fileID: 114764513849342746}
   - component: {fileID: 195083306796875194}
-  - component: {fileID: 114976699265465972}
-  - component: {fileID: 135069852932050122}
   m_Layer: 10
   m_Name: Seagull
   m_TagString: Untagged
@@ -1010,31 +1008,6 @@ MonoBehaviour:
   state: 0
   animator: {fileID: 95539813905627394}
   foodAggroDistance: 10
---- !u!114 &114976699265465972
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1971787025152472}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e5fe36bdae210b45bd6ae75c6c658d0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  controller: {fileID: 0}
-  animationSpeedVariation: 0.2
---- !u!135 &135069852932050122
-SphereCollider:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1971787025152472}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!137 &137542373818213114
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1
@@ -1118,7 +1091,7 @@ NavMeshAgent:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1971787025152472}
-  m_Enabled: 1
+  m_Enabled: 0
   m_AgentTypeID: 0
   m_Radius: 0.3
   m_Speed: 1.5

@@ -13,12 +13,14 @@ public class Food : MonoBehaviour {
     private new Renderer renderer;
 
     public bool lookedUpon = false;
+    private Vector3 spawnPoint;
 
 	void Start ()
     {
         renderer = GetComponent<Renderer>();
         rb = GetComponent<Rigidbody>();
         foodList.Add(this);
+        spawnPoint = transform.position;
     }
 	
 	void Update () {
@@ -48,5 +50,10 @@ public class Food : MonoBehaviour {
     {
         foodList.Remove(this);
         Destroy(gameObject);
+    }
+
+    public void Respawn()
+    {
+        transform.position = spawnPoint;
     }
 }

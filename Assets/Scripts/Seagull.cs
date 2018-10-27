@@ -30,21 +30,20 @@ public class Seagull : MonoBehaviour {
     private NavMeshAgent agent;
     private float wanderCooldownCurrent;
 
-    private BoidBehaviour boid;
     private Food selectedFood = null;
 
-    private float landProgress = 0f;
-    private Vector3 landPointStart;
-    private Quaternion landRotStart;
+    private float moveProgress = 0f;
+    private Vector3 movePointStart;
+    private Vector3 movePointFinish;
+    private Quaternion moveRotationStart;
+    private float flySpeed = 1f;
 
     private uint foodPoints = 0;
     private int[] growth = new int[] { 3, 6, 9, 12 };
 
     void Start ()
     {
-        SeagullManager.Instance.Register(this);
         agent = GetComponent<NavMeshAgent>();
-        boid = GetComponent<BoidBehaviour>();
         wanderCooldownCurrent = wanderCooldown;
         SetState(SeagullState.FLYING);
         RecalculateScale();
@@ -83,6 +82,7 @@ public class Seagull : MonoBehaviour {
                 }
                 break;
             case SeagullState.FLYING:
+                //Check for landing reasons
                 foreach (var food in Food.foodList)
                 {
                     if (Vector3.Distance(food.transform.position, SeagullManager.Instance.landPoint.position) < foodAggroDistance && 
@@ -92,21 +92,35 @@ public class Seagull : MonoBehaviour {
                         SetState(SeagullState.LANDING);
                     }
                 }
+
+                transform.position = Vector3.Slerp(movePointStart, movePointFinish, moveProgress);
+                //transform.rotation = Quaternion.Slerp(moveRotationStart, Quaternion.identity, moveProgress);
+
+                Vector3 direction = movePointFinish - movePointStart;
+                Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);
+                transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, moveProgress);
+
+                moveProgress += flySpeed * Time.deltaTime;
+                if (moveProgress >= 1f)
+                {
+                    SetState(SeagullState.FLYING);
+                }
+
                 break;
             case SeagullState.LANDING:
-                transform.position = Vector3.Slerp(landPointStart, SeagullManager.Instance.landPoint.position, landProgress);
-                transform.rotation = Quaternion.Lerp(landRotStart, Quaternion.identity, landProgress);
-                landProgress += .5f * Time.deltaTime;
-                if (landProgress >= 1f)
+                transform.position = Vector3.Slerp(movePointStart, SeagullManager.Instance.landPoint.position, moveProgress);
+                transform.rotation = Quaternion.Lerp(moveRotationStart, Quaternion.identity, moveProgress);
+                moveProgress += flySpeed * Time.deltaTime;
+                if (moveProgress >= 1f)
                 {
                     SetState(SeagullState.IDLE);
                 }
                 break;
             case SeagullState.TAKEOFF:
-                transform.position = Vector3.Slerp(landPointStart, SeagullManager.Instance.flyPoint.position, landProgress);
-                transform.rotation = Quaternion.Lerp(landRotStart, Quaternion.identity, landProgress);
-                landProgress += .5f * Time.deltaTime;
-                if (landProgress >= 1f)
+                transform.position = Vector3.Slerp(movePointStart, SeagullManager.Instance.GetRandomFlyPoint(), moveProgress);
+                transform.rotation = Quaternion.Lerp(moveRotationStart, Quaternion.identity, moveProgress);
+                moveProgress += flySpeed * Time.deltaTime;
+                if (moveProgress >= 1f)
                 {
                     SetState(SeagullState.FLYING);
                 }
@@ -153,13 +167,14 @@ public class Seagull : MonoBehaviour {
 
     private void SetState(SeagullState newState)
     {
-        boid.enabled = false;
         animator.SetBool("idle", false);
         animator.SetBool("walk", false);
         animator.SetBool("fly", false);
         animator.SetBool("landing", false);
         animator.SetBool("takeoff", false);
         agent.enabled = false;
+        moveProgress = 0;
+        flySpeed = Random.Range(.1f, 1f);
         switch (newState)
         {
             case SeagullState.IDLE:
@@ -168,20 +183,21 @@ public class Seagull : MonoBehaviour {
                 break;
             case SeagullState.FLYING:
                 animator.SetBool("fly", true);
-                transform.position = SeagullManager.Instance.flyPoint.position;
-                boid.enabled = true;
+                moveRotationStart = transform.rotation;
+                movePointStart = transform.position;
+                movePointFinish = SeagullManager.Instance.GetRandomFlyPoint();
                 break;
             case SeagullState.LANDING:
                 animator.SetBool("landing", true);
-                landPointStart = transform.position;
-                landRotStart = transform.rotation;
-                landProgress = 0;
+                movePointStart = transform.position;
+                moveRotationStart = transform.rotation;
+                moveProgress = 0;
                 break;
             case SeagullState.TAKEOFF:
                 animator.SetBool("takeoff", true);
-                landPointStart = transform.position;
-                landRotStart = transform.rotation;
-                landProgress = 0;
+                movePointStart = transform.position;
+                moveRotationStart = transform.rotation;
+                moveProgress = 0;
                 break;
             case SeagullState.WALKING_TO_FOOD:
                 animator.SetBool("walk", true);
