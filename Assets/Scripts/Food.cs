@@ -23,7 +23,7 @@ public class Food : MonoBehaviour {
         spawnPoint = transform.position;
     }
 	
-	void Update () {
+	void LateUpdate () {
 
         renderer.material.SetFloat("_Outline", 0f);
     }
@@ -55,5 +55,7 @@ public class Food : MonoBehaviour {
     public void Respawn()
     {
         transform.position = spawnPoint;
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 }

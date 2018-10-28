@@ -221,7 +221,9 @@ public class Seagull : MonoBehaviour {
                 break;
             case SeagullState.FOLLOWING:
                 animator.SetBool("walk", true);
+                Player.Instance.AddAFriend();
                 agent.enabled = true;
+                agent.speed *= 5f;
                 break;
             default:
                 break;

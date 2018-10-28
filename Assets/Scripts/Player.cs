@@ -10,11 +10,16 @@ public class Player : SingletonComponent<Player> {
     [SerializeField] private Camera cam;
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private PostProcessVolume ppVolume;
+    [SerializeField] private UnityStandardAssets.Characters.FirstPerson.FirstPersonController fpsControler;
 
     [Header("Energy Gaining")]
     public float energyRecoverSpeed = 1f;
     public float energy = 0;
     public TextMeshProUGUI energyValue;
+
+    public TMP_ColorGradient drainGradient;
+    public TMP_ColorGradient gainGradient;
+    public TMP_ColorGradient idleGradient;
 
     [Header("Energy Draining")]
     public float energyDrainSpeed = 1f;
@@ -22,7 +27,10 @@ public class Player : SingletonComponent<Player> {
 
     private Food holdingFood;
     private int itemLayerMask;
+    private int nonPlayerLayerMask;
     private Vector3 screenCenter;
+
+    public bool haveAFriend = false;
 
     Vignette vignetteLayer = null;
 
@@ -31,9 +39,18 @@ public class Player : SingletonComponent<Player> {
     // Use this for initialization
     void Start () {
         itemLayerMask = LayerMask.GetMask("Items");
+        nonPlayerLayerMask = LayerMask.GetMask("Default");
         screenCenter = new Vector3(cam.pixelWidth / 2f, cam.pixelHeight / 2f, cam.nearClipPlane);
         ppVolume.profile.TryGetSettings(out vignetteLayer);
 
+    }
+
+    public void AddAFriend()
+    {
+        haveAFriend = true;
+        energyValue.colorGradientPreset = gainGradient;
+        energyValue.text = "You've made a seagull friend";
+        fpsControler.m_WalkSpeed *= 2f;
     }
 
     void Update ()
@@ -70,37 +87,51 @@ public class Player : SingletonComponent<Player> {
             }
         }
 
-        //Energy GAIN
-        float energyGained = 0;
-        foreach (var seagull in SeagullManager.Instance.activeSeagulls)
-        {
-            Vector3 targetDir = seagull.transform.position - cam.transform.position;
-            float angle = Vector3.Angle(targetDir, cam.transform.forward);
+        energyValue.colorGradientPreset = idleGradient;
 
-            bool seagullVisible = angle < 20.0f;
-            if (seagullVisible)
+        if (haveAFriend == false)
+        {
+            //Energy GAIN
+            float energyGained = 0;
+            foreach (var seagull in SeagullManager.Instance.activeSeagulls)
             {
-                float distanceToSeagull = targetDir.magnitude;
-                energyGained += (seagull.transform.localScale.x / distanceToSeagull) * energyRecoverSpeed * Time.deltaTime;
-                //print("distance: " + distanceToSeagull);
+                Vector3 targetDir = seagull.transform.position - cam.transform.position;
+                float angle = Vector3.Angle(targetDir, cam.transform.forward);
+
+                bool seagullAngleAlright = angle < 20.0f;
+                if (seagullAngleAlright)
+                {
+
+                    if (Physics.Linecast(cam.transform.position, seagull.transform.position) == false)
+                    {
+                        float distanceToSeagull = targetDir.magnitude;
+                        energyGained += (seagull.transform.localScale.x / distanceToSeagull) * energyRecoverSpeed * Time.deltaTime;
+                        //print("distance: " + distanceToSeagull);
+                        energyValue.colorGradientPreset = gainGradient;
+                    }
+                }
             }
-        }
-        energy += energyGained;
+            energy += energyGained;
 
-        //Energy SPENDING
-        if (energyDraining)
-        {
-            energy -= Time.deltaTime * energyDrainSpeed;
-        }
+            if (energyGained == 0)
+            {
+                //Energy SPENDING
+                if (energyDraining)
+                {
+                    energy -= Time.deltaTime * energyDrainSpeed;
+                    energyValue.colorGradientPreset = drainGradient;
+                }
+            }
+
+            energy = Mathf.Clamp(energy, 0f, 100f);
+            vignetteLayer.intensity.value = (1f - energy / 100f) / 2f;
+            energyValue.text = string.Format("Energy: {0}%", energy.ToString("0.##"));
 
 
-        energy = Mathf.Clamp(energy, 0f, 100f);
-        vignetteLayer.intensity.value = (1f -  energy / 100f) /2f;
-        energyValue.text = string.Format("Energy: {0}%", energy.ToString("0.##"));
-
-        if (Mathf.Approximately(0, energy))
-        {
-            Die();
+            if (Mathf.Approximately(0, energy))
+            {
+                Die();
+            }
         }
     }
 
@@ -110,11 +141,6 @@ public class Player : SingletonComponent<Player> {
         energyDraining = false;
         Respawn();
     }
-
-    //void OnGUI()
-    //{
-    //    GUI.Label(new Rect(30, 30, 100, 50), energy.ToString());
-    //}
 
     public void Respawn()
     {
