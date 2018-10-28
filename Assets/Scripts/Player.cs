@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
+using TMPro;
 
 public class Player : SingletonComponent<Player> {
 
@@ -13,6 +14,7 @@ public class Player : SingletonComponent<Player> {
     [Header("Energy Gaining")]
     public float energyRecoverSpeed = 1f;
     public float energy = 0;
+    public TextMeshProUGUI energyValue;
 
     [Header("Energy Draining")]
     public float energyDrainSpeed = 1f;
@@ -93,7 +95,8 @@ public class Player : SingletonComponent<Player> {
 
 
         energy = Mathf.Clamp(energy, 0f, 100f);
-        vignetteLayer.intensity.value = 1f -  energy / 100f;
+        vignetteLayer.intensity.value = (1f -  energy / 100f) /2f;
+        energyValue.text = string.Format("Energy: {0}%", energy.ToString("0.##"));
 
         if (Mathf.Approximately(0, energy))
         {
@@ -108,10 +111,10 @@ public class Player : SingletonComponent<Player> {
         Respawn();
     }
 
-    void OnGUI()
-    {
-        GUI.Label(new Rect(30, 30, 100, 50), energy.ToString());
-    }
+    //void OnGUI()
+    //{
+    //    GUI.Label(new Rect(30, 30, 100, 50), energy.ToString());
+    //}
 
     public void Respawn()
     {
